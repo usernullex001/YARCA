@@ -1,4 +1,4 @@
-use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
+use YARCA::*;
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
@@ -6,8 +6,6 @@ use crossterm::{
     style::Print,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
 };
-use hex::{decode, encode};
-use rand::{Rng, rng};
 use std::{
     collections::HashMap,
     fmt,
@@ -85,36 +83,13 @@ fn help() {
     }
 }
 
-fn encrypt(plaintext: &str, key: &[u8; 32]) -> (String, String) {
-    let mut rng = rng();
-    let nonce_bytes: [u8; 12] = rng.random();
-    let cipher = Aes256Gcm::new_from_slice(key).expect("Cipher failed.");
-    let nonce = Nonce::from_slice(&nonce_bytes);
-
-    let cipher_text = cipher
-        .encrypt(nonce, plaintext.as_bytes())
-        .expect("Encryption failed.");
-    (encode(nonce_bytes), encode(&cipher_text))
-}
-
-fn decrypt(nonce_hex: &str, ciphertext_hex: &str, key: &[u8; 32]) -> Option<String> {
-    let cipher = Aes256Gcm::new_from_slice(key).expect("Cipher failed.");
-
-    let nonce_bytes = decode(nonce_hex).ok()?;
-    let ciphertext_bytes = decode(ciphertext_hex).ok()?;
-    let nonce = Nonce::from_slice(&nonce_bytes);
-
-    match cipher.decrypt(nonce, ciphertext_bytes.as_slice()) {
-        Ok(plaintext_bytes) => String::from_utf8(plaintext_bytes).ok(),
-        Err(_) => None,
-    }
-}
 
 fn init_hashmap() -> HashMap<&'static str, ClientEvent> {
     let mut hashmap: HashMap<&'static str, ClientEvent> = HashMap::new();
     hashmap.insert("quit", ClientEvent::Custom(Command::Quit));
     hashmap.insert("help", ClientEvent::Custom(Command::Help));
     hashmap.insert("addr", ClientEvent::Custom(Command::Addr));
+    hashmap.insert("e", ClientEvent::Custom(Command::Quit)); // Emergency quit >v<
     hashmap
 }
 
