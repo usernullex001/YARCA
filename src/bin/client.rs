@@ -83,7 +83,6 @@ fn help() {
     }
 }
 
-
 fn init_hashmap() -> HashMap<&'static str, ClientEvent> {
     let mut hashmap: HashMap<&'static str, ClientEvent> = HashMap::new();
     hashmap.insert("quit", ClientEvent::Custom(Command::Quit));

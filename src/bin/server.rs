@@ -15,21 +15,25 @@ enum ServerMessage {
     ChatMessage(String, String),
 }
 
-type ClientsType =
-    Arc<Mutex<HashMap<String, Arc<Mutex<TcpStream>>>>>;
-fn broadcast(string: &str,secret_key_arc: Arc<[u8; 32]> , usernameskip: Option<&str>, clients: ClientsType){
+type ClientsType = Arc<Mutex<HashMap<String, Arc<Mutex<TcpStream>>>>>;
+fn broadcast(
+    string: &str,
+    secret_key_arc: Arc<[u8; 32]>,
+    usernameskip: Option<&str>,
+    clients: ClientsType,
+) {
     for (name, client_stream_mutex) in clients.lock().unwrap().iter() {
-	if let Some(username) = usernameskip{
-	   if name == &username {
-	       continue;
-	   }
-	}
-	let (nonce, encrypted_msg) = encrypt(&string, &secret_key_arc);
-	let message_to_send = format!("{nonce}:{encrypted_msg}");
+        if let Some(username) = usernameskip {
+            if name == &username {
+                continue;
+            }
+        }
+        let (nonce, encrypted_msg) = encrypt(&string, &secret_key_arc);
+        let message_to_send = format!("{nonce}:{encrypted_msg}");
 
-	let mut client_stream = client_stream_mutex.lock().unwrap();
+        let mut client_stream = client_stream_mutex.lock().unwrap();
 
-	let _ = client_stream.write_all(message_to_send.as_bytes());
+        let _ = client_stream.write_all(message_to_send.as_bytes());
     }
 }
 
@@ -47,8 +51,7 @@ fn main() -> Result<(), std::io::Error> {
     println!("Server listening on {}", &addr);
 
     let (tx_server, rx_server) = std::sync::mpsc::channel::<ServerMessage>();
-    let clients: ClientsType  =
-        Arc::new(Mutex::new(HashMap::new()));
+    let clients: ClientsType = Arc::new(Mutex::new(HashMap::new()));
 
     let clients_clone = clients.clone();
     let secret_key_arc = Arc::new(secret_key);
@@ -65,35 +68,33 @@ fn main() -> Result<(), std::io::Error> {
                         .insert(username.clone(), stream);
 
                     broadcast(
-			&format!("{username} has joined chat."),
-			secret_key_arc_clone.clone(),
-			Some(&username),
-			clients_clone.clone(),
-		    );
+                        &format!("{username} has joined chat."),
+                        secret_key_arc_clone.clone(),
+                        Some(&username),
+                        clients_clone.clone(),
+                    );
                 }
                 ServerMessage::ClientDisconnected(username) => {
                     println!("Client {username} disconnected.");
                     clients_clone.lock().unwrap().remove(&username);
 
                     broadcast(
-			&format!("{username} has left chat."),
-			secret_key_arc_clone.clone(),
-			None,
-			clients_clone.clone(),
-		    );
-		    
+                        &format!("{username} has left chat."),
+                        secret_key_arc_clone.clone(),
+                        None,
+                        clients_clone.clone(),
+                    );
                 }
                 ServerMessage::ChatMessage(sender, content) => {
                     let full_message = format!("[{sender}]: {content}");
                     println!("Broadcasting: {}", full_message.trim());
 
-		    broadcast(
-			&full_message,
-			secret_key_arc_clone.clone(),
-			None,
-			clients_clone.clone(),
-		    );
-		    
+                    broadcast(
+                        &full_message,
+                        secret_key_arc_clone.clone(),
+                        None,
+                        clients_clone.clone(),
+                    );
                 }
             }
         }
