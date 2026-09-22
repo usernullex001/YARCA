@@ -1,7 +1,7 @@
 use YARCA::*;
 use crossterm::{
     cursor,
-    event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
+    event::{self, Event, KeyCode, KeyEvent},
     execute,
     style::Print,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
@@ -199,14 +199,12 @@ fn main() -> io::Result<()> {
         let mut input_buffer = String::new();
 
         loop {
-            if let Ok(Event::Key(key_event)) = event::read() {
-                if key_event.kind == KeyEventKind::Press {
-                    if let Some(event) = input_manager(&mut input_buffer, key_event, &cmds_map) {
-                        let _ = tx_stdin.send(event.clone());
-                        if event == ClientEvent::Custom(Command::Quit) {
-                            break;
-                        }
-                    }
+            if let Ok(Event::Key(key_event)) = event::read()
+                && let Some(event) = input_manager(&mut input_buffer, key_event, &cmds_map)
+            {
+                let _ = tx_stdin.send(event.clone());
+                if let ClientEvent::Custom(Command::Quit) = event {
+                    break;
                 }
             }
         }
@@ -216,11 +214,11 @@ fn main() -> io::Result<()> {
         let mut stream = loop {
             execute!(
                 io::stdout(),
-                Print(format!("Attempting to connect to {}...\n\r", &addr))
+                Print(format!("Attempting to connect to {}...\n\r", addr))
             )?;
             match TcpStream::connect(&addr) {
                 Ok(mut s) => {
-                    execute!(io::stdout(), Print(format!("Connected to {}\n\r", &addr)))?;
+                    execute!(io::stdout(), Print(format!("Connected to {}\n\r", addr)))?;
 
                     let (nonce, encrypted_username) = encrypt(&username, &secret_key);
                     let encrypted_message = format!("{nonce}:{encrypted_username}\n\r");
@@ -244,7 +242,7 @@ fn main() -> io::Result<()> {
                 Err(e) => {
                     execute!(
                         io::stdout(),
-                        Print(format!("Failed to connect to {}: {e}\n\r", &addr))
+                        Print(format!("Failed to connect to {}: {e}\n\r", addr))
                     )?;
                     execute!(
                         io::stdout(),

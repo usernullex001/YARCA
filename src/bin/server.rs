@@ -23,12 +23,12 @@ fn broadcast(
     clients: ClientsType,
 ) {
     for (name, client_stream_mutex) in clients.lock().unwrap().iter() {
-        if let Some(username) = usernameskip {
-            if name == &username {
-                continue;
-            }
+        if let Some(username) = usernameskip
+            && name == username
+        {
+            continue;
         }
-        let (nonce, encrypted_msg) = encrypt(&string, &secret_key_arc);
+        let (nonce, encrypted_msg) = encrypt(string, &secret_key_arc);
         let message_to_send = format!("{nonce}:{encrypted_msg}");
 
         let mut client_stream = client_stream_mutex.lock().unwrap();
@@ -48,7 +48,7 @@ fn main() -> Result<(), std::io::Error> {
 
     let addr = std::env::var("ADDR").unwrap_or_else(|_| "0.0.0.0:8080".into());
     let listener = TcpListener::bind(&addr)?;
-    println!("Server listening on {}", &addr);
+    println!("Server listening on {}", addr);
 
     let (tx_server, rx_server) = std::sync::mpsc::channel::<ServerMessage>();
     let clients: ClientsType = Arc::new(Mutex::new(HashMap::new()));
