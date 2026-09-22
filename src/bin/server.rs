@@ -1,5 +1,3 @@
-use YARCA::*;
-
 use std::{
     collections::HashMap,
     io::{Read, Write},
@@ -7,6 +5,7 @@ use std::{
     sync::{Arc, Mutex},
     thread::spawn,
 };
+use yarca::*;
 
 #[derive(Debug)]
 enum ServerMessage {

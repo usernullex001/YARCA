@@ -1,4 +1,3 @@
-use YARCA::*;
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent},
@@ -15,6 +14,7 @@ use std::{
     thread,
     time::Duration,
 };
+use yarca::*;
 
 const RECONNECT_DELAY: u64 = 5;
 
